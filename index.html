@@ -312,6 +312,24 @@ Content-Type: application/json
                             <button class="btn btn-secondary" onclick="clearRequest()">✕ Clear</button>
                         </div>
 
+                        <div id="protocolSection" class="hidden" style="margin-bottom: 16px;">
+                            <label>API Protocol</label>
+                            <div class="info-box">
+                                <h4>🔗 Select HTTP or HTTPS</h4>
+                                <p>Choose the correct protocol for your target API. Local servers (127.0.0.1, localhost) typically use <strong>HTTP</strong>. Cloud APIs usually use <strong>HTTPS</strong>.</p>
+                            </div>
+                            <div class="radio-group">
+                                <label class="radio-option" onclick="selectProtocol('http')">
+                                    <input type="radio" name="protocol" value="http">
+                                    <span>HTTP (local servers, no SSL)</span>
+                                </label>
+                                <label class="radio-option selected" onclick="selectProtocol('https')">
+                                    <input type="radio" name="protocol" value="https" checked>
+                                    <span>HTTPS (cloud APIs, SSL/TLS)</span>
+                                </label>
+                            </div>
+                        </div>
+
                         <div id="parsedFieldsSection" class="hidden">
                             <label>SELECT INPUT FIELD (where $INPUT goes)</label>
                             <div class="info-box warning">
@@ -1452,7 +1470,8 @@ run:
                 multipartContentType: '',
                 inputFieldPath: '',
                 responseJsonPath: '$.answer',
-                proxy: ''
+                proxy: '',
+                protocol: 'https://'
             },
             parsedFields: [],
             parsedResponseFields: [],
@@ -2039,7 +2058,23 @@ Content-Type: application/json
             }
 
             // Build URI and update UI
-            const protocol = 'https://';
+            // Show protocol selector and auto-detect based on host
+            document.getElementById('protocolSection').classList.remove('hidden');
+            
+            // Auto-detect protocol: use http for localhost/127.0.0.1, https for others
+            const isLocalHost = host && (host.includes('127.0.0.1') || host.includes('localhost') || host.startsWith('192.168.') || host.startsWith('10.'));
+            const suggestedProtocol = isLocalHost ? 'http://' : 'https://';
+            state.restConfig.protocol = suggestedProtocol;
+            
+            // Update protocol UI to reflect auto-detection
+            document.querySelectorAll('#protocolSection .radio-option').forEach(opt => {
+                const val = opt.querySelector('input').value;
+                const isSelected = val === suggestedProtocol.replace('://', '');
+                opt.classList.toggle('selected', isSelected);
+                opt.querySelector('input').checked = isSelected;
+            });
+            
+            const protocol = state.restConfig.protocol || 'https://';
             const fullUri = host ? protocol + host + path : path;
             state.restConfig.uri = fullUri;
             state.restConfig.method = method;
@@ -2390,6 +2425,7 @@ Content-Type: application/json
         function clearRequest() {
             document.getElementById('rawRequest').value = '';
             document.getElementById('parsedFieldsSection').classList.add('hidden');
+            document.getElementById('protocolSection').classList.add('hidden');
             state.parsedFields = [];
             state.selectedInputField = null;
             state.restConfig = {
@@ -2401,8 +2437,15 @@ Content-Type: application/json
                 multipartContentType: '',
                 inputFieldPath: '',
                 responseJsonPath: '$.choices[0].message.content',
-                proxy: ''
+                proxy: '',
+                protocol: 'https://'
             };
+            // Reset protocol UI
+            document.querySelectorAll('#protocolSection .radio-option').forEach(opt => {
+                const val = opt.querySelector('input').value;
+                opt.classList.toggle('selected', val === 'https');
+                opt.querySelector('input').checked = val === 'https';
+            });
             clearParsedResponseFieldsUI();
             const rawResponseInput = document.getElementById('rawResponse');
             if (rawResponseInput) {
@@ -2414,6 +2457,33 @@ Content-Type: application/json
         function toggleCollapse(el) {
             el.classList.toggle('collapsed');
             el.nextElementSibling.classList.toggle('collapsed');
+        }
+
+        function selectProtocol(protocol) {
+            state.restConfig.protocol = protocol + '://';
+            
+            // Update UI selection
+            document.querySelectorAll('#protocolSection .radio-option').forEach(opt => {
+                const val = opt.querySelector('input').value;
+                opt.classList.toggle('selected', val === protocol);
+                opt.querySelector('input').checked = val === protocol;
+            });
+            
+            // Update the URI with new protocol
+            const currentUri = state.restConfig.uri || '';
+            if (currentUri) {
+                // Replace existing protocol
+                const updatedUri = currentUri.replace(/^https?:\/\//, protocol + '://');
+                state.restConfig.uri = updatedUri;
+                
+                // Update URI input field
+                const uriInput = document.getElementById('restUri');
+                if (uriInput) {
+                    uriInput.value = updatedUri;
+                }
+            }
+            
+            updatePreview();
         }
 
         // ==========================================
