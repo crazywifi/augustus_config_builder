@@ -1331,8 +1331,8 @@ run:
         };
 
         const CATEGORY_GROUPS = {
-            'multi-turn': ['crescendo', 'goat', 'hydra', 'mischievous'],
-            iterative: ['pair', 'tap', 'autodan', 'gcg', 'dra']
+            'multi-turn': ['crescendo', 'goat', 'hydra', 'mischievous', 'pair', 'tap'],
+            iterative: ['autodan', 'gcg', 'dra']
         };
 
         const PROBE_GLOB_PRESETS = [
@@ -1433,8 +1433,8 @@ run:
             configFileName: 'File name used when downloading the generated YAML configuration.'
         };
 
-        const MULTI_TURN_PREFIXES = ['crescendo', 'goat', 'hydra', 'mischievous'];
-        const ITERATIVE_PREFIXES = ['pair', 'tap'];
+        const MULTI_TURN_PREFIXES = ['crescendo', 'goat', 'hydra', 'mischievous', 'pair', 'tap'];
+        const ITERATIVE_PREFIXES = ['autodan', 'gcg', 'dra'];
 
         const MULTI_TURN_STRATEGIES = [
             { id: 'crescendo', name: 'crescendo.Crescendo', probe: 'crescendo.Crescendo' },
@@ -1567,13 +1567,13 @@ run:
                 {
                     key: 'multi-turn',
                     label: 'Multi-Turn Attacks',
-                    description: 'Conversation-based strategies such as Crescendo, GOAT, Hydra, and Mischievous User.',
+                    description: 'Conversation-based strategies such as Crescendo, GOAT, Hydra, Mischievous User, PAIR, and TAP.',
                     count: CATEGORY_GROUPS['multi-turn'].reduce((total, prefix) => total + (counts[prefix] || 0), 0)
                 },
                 {
                     key: 'iterative',
-                    label: 'Iterative Attacks',
-                    description: 'PAIR, TAP, AutoDAN, GCG, and DRA style optimization-driven attacks.',
+                    label: 'Iterative Optimization',
+                    description: 'AutoDAN, GCG, and DRA style gradient/optimization-driven attacks.',
                     count: CATEGORY_GROUPS.iterative.reduce((total, prefix) => total + (counts[prefix] || 0), 0)
                 },
                 ...Object.keys(counts).sort().map(prefix => ({
